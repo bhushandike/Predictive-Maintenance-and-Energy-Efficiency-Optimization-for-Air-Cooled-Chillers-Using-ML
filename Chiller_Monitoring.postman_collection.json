@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "Chiller Monitoring System",
+    "description": "Complete API collection for testing static and real-time monitoring",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["health"]
+        },
+        "description": "Check if backend is running and models are loaded"
+      }
+    },
+    {
+      "name": "2. Real-Time Data (From CSV)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// This script will use data from CSV file when using Collection Runner",
+              "const data = {",
+              "    'timestamp': new Date().toISOString(),",
+              "    'Compressor 1 Current': parseFloat(pm.iterationData.get('Compressor 1 Current')) || 0,",
+              "    'Compressor 2 Current': parseFloat(pm.iterationData.get('Compressor 2 Current')) || 0,",
+              "    'Comp 1 FLA': parseFloat(pm.iterationData.get('Comp 1 FLA')) || 50,",
+              "    'Comp 2 FLA': parseFloat(pm.iterationData.get('Comp 2 FLA')) || 50,",
+              "    'Compressor 1 On/Off Relay': parseInt(pm.iterationData.get('Compressor 1 On/Off Relay')) || 0,",
+              "    'Compressor 2 On/Off Relay': parseInt(pm.iterationData.get('Compressor 2 On/Off Relay')) || 0,",
+              "    'Discharge Pressure 1': parseFloat(pm.iterationData.get('Discharge Pressure 1')) || 0,",
+              "    'Discharge Pressure 2': parseFloat(pm.iterationData.get('Discharge Pressure 2')) || 0,",
+              "    'Suction Pressure 1': parseFloat(pm.iterationData.get('Suction Pressure 1')) || 0,",
+              "    'Suction Pressure 2': parseFloat(pm.iterationData.get('Suction Pressure 2')) || 0,",
+              "    'Suction Superheat 1': parseFloat(pm.iterationData.get('Suction Superheat 1')) || 0,",
+              "    'Suction Superheat 2': parseFloat(pm.iterationData.get('Suction Superheat 2')) || 0,",
+              "    'Discharge Temperature 1': parseFloat(pm.iterationData.get('Discharge Temperature 1')) || 0,",
+              "    'Discharge Temperature 2': parseFloat(pm.iterationData.get('Discharge Temperature 2')) || 0,",
+              "    'Oil Pressure Diff 1': parseFloat(pm.iterationData.get('Oil Pressure Diff 1')) || 0,",
+              "    'Oil Pressure Diff 2': parseFloat(pm.iterationData.get('Oil Pressure Diff 2')) || 0,",
+              "    'Cooler Water In Temp': parseFloat(pm.iterationData.get('Cooler Water In Temp')) || 0,",
+              "    'Cooler Water Out Temp': parseFloat(pm.iterationData.get('Cooler Water Out Temp')) || 0,",
+              "    'Electronic Expansion Valve 1': parseFloat(pm.iterationData.get('Electronic Expansion Valve 1')) || 0,",
+              "    'Electronic Expansion Valve 2': parseFloat(pm.iterationData.get('Electronic Expansion Valve 2')) || 0,",
+              "    'Liquid Temp 1': parseFloat(pm.iterationData.get('Liquid Temp 1')) || 0,",
+              "    'Liquid Temp 2': parseFloat(pm.iterationData.get('Liquid Temp 2')) || 0,",
+              "    'Suction Temperature 1': parseFloat(pm.iterationData.get('Suction Temperature 1')) || 0,",
+              "    'Suction Temperature 2': parseFloat(pm.iterationData.get('Suction Temperature 2')) || 0",
+              "};",
+              "",
+              "pm.variables.set('chiller_data', JSON.stringify(data));",
+              "",
+              "console.log('📡 Sending data point:', data);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const jsonData = pm.response.json();",
+              "console.log('✅ Response received:', jsonData);",
+              "",
+              "pm.test('Response has summary', function () {",
+              "    pm.expect(jsonData).to.have.property('summary');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{chiller_data}}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/realtime/data",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["realtime", "data"]
+        },
+        "description": "Send real-time chiller data from CSV using Collection Runner"
+      }
+    },
+    {
+      "name": "3. Get Real-Time History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/realtime/history?limit=100",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["realtime", "history"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "description": "Get last 100 real-time data points"
+      }
+    },
+    {
+      "name": "4. Clear Real-Time Data",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/realtime/clear",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["realtime", "clear"]
+        },
+        "description": "Clear real-time data buffer"
+      }
+    }
+  ]
+}
